@@ -109,7 +109,7 @@ button:hover {
 
   <input id="code" placeholder="MASUKKAN KODE">
   <br>
-  <button onclick="spin()">SPIN</button>
+  <button onclick="checkCode()">SPIN</button>
 
 </div>
 
@@ -185,21 +185,42 @@ function easeOut(t) {
   return 1 - Math.pow(1 - t, 4);
 }
 
-/* SPIN */
-function spin() {
-  let index = Math.floor(Math.random() * prizes.length);
+/* Check kode dengan API Google Apps Script */
+function checkCode() {
+  const code = document.getElementById("code").value;
+
+  fetch("https://script.google.com/macros/s/AKfycbw_Ul0ghKRjZXM65YRYOxMEwRGpPyKP4YysKyaFK-gKjhtKlm5mhivFeUQtUgAhAep_/exec", {
+    method: "POST",
+    body: new URLSearchParams({ code: code })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (!data.success) {
+      alert(data.message);
+      return;
+    }
+
+    spinByResult(data.prize); // Jika valid, lanjut spin sesuai hadiah
+  });
+}
+
+/* SPIN berdasarkan hadiah yang didapat */
+function spinByResult(prizeName) {
+
+  let index = prizes.indexOf(prizeName);
+
+  if (index === -1) {
+    alert("Hadiah tidak ada di wheel");
+    return;
+  }
 
   let arc = 360 / prizes.length;
-
-  /* posisi tengah */
   let target = (index * arc) + (arc / 2);
 
   let finalAngle = 360 * 6 - target;
 
   let start = null;
   let duration = 5000;
-
-  const tick = document.getElementById("tick");
 
   function animate(time) {
     if (!start) start = time;
@@ -214,11 +235,9 @@ function spin() {
     canvas.style.transform = `rotate(${currentAngle}deg)`;
 
     if (progress < 1) {
-      tick.currentTime = 0;
-      tick.play();
       requestAnimationFrame(animate);
     } else {
-      alert("🎉 Kamu dapat: " + prizes[index]);
+      alert("🎉 Kamu dapat: " + prizeName);
     }
   }
 
