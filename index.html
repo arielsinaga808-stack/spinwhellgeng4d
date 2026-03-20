@@ -13,53 +13,10 @@ body {
   text-align: center;
 }
 
-/* efek “petir” sederhana */
-body::before {
-  content: "";
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, rgba(255,0,0,0.2), transparent);
-  pointer-events: none;
-}
-
-/* container */
 .container {
   margin-top: 20px;
 }
 
-/* lampu LED */
-.lights {
-  width: 420px;
-  height: 420px;
-  margin: auto;
-  position: relative;
-  border-radius: 50%;
-}
-
-.lights span {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: yellow;
-  border-radius: 50%;
-  box-shadow: 0 0 10px yellow;
-  animation: blink 0.8s infinite alternate;
-}
-
-@keyframes blink {
-  from {opacity:1;}
-  to {opacity:0.3;}
-}
-
-/* wheel */
-#wheel {
-  border-radius: 50%;
-  background: white;
-  box-shadow: 0 0 50px gold;
-}
-
-/* pointer */
 .pointer {
   width: 0;
   height: 0;
@@ -70,7 +27,12 @@ body::before {
   filter: drop-shadow(0 0 10px red);
 }
 
-/* input tabel */
+canvas {
+  margin-top: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 50px gold;
+}
+
 input {
   margin-top: 15px;
   padding: 10px;
@@ -80,7 +42,6 @@ input {
   text-align: center;
 }
 
-/* tombol neon */
 button {
   margin-top: 10px;
   padding: 12px 30px;
@@ -89,36 +50,32 @@ button {
   border: none;
   background: black;
   color: #ff0044;
-  box-shadow: 0 0 15px #ff0044, 0 0 30px #ff0044;
+  box-shadow: 0 0 15px #ff0044;
   cursor: pointer;
 }
 
 button:hover {
-  box-shadow: 0 0 30px #ff0044, 0 0 60px #ff0044;
+  box-shadow: 0 0 30px #ff0044;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-
 <h1>🎰 SPIN WHEEL GACOR GENG4D</h1>
 
-<div class="pointer"></div>
+<div class="container">
+  <div class="pointer"></div>
 
-<div class="lights" id="lights">
   <canvas id="wheel" width="400" height="400"></canvas>
+
+  <br>
+
+  <input id="code" placeholder="MASUKKAN KODE">
+  <br>
+
+  <button onclick="spin()">SPIN</button>
 </div>
-
-<input id="code" placeholder="MASUKKAN KODE">
-<br>
-
-<button onclick="spin()">SPIN</button>
-
-</div>
-
-<audio id="tick" src="https://www.soundjay.com/mechanical/sounds/tick-1.mp3"></audio>
 
 <script>
 const canvas = document.getElementById("wheel");
@@ -131,31 +88,17 @@ const prizes = [
 
 let currentAngle = 0;
 
-/* gambar wheel + garis kolom jelas */
+/* gambar wheel */
 function drawWheel() {
   const arc = (2 * Math.PI) / prizes.length;
 
   for (let i = 0; i < prizes.length; i++) {
-
-    // warna selang-seling
     ctx.beginPath();
     ctx.fillStyle = i % 2 ? "#FFD700" : "#8B0000";
     ctx.moveTo(200, 200);
     ctx.arc(200, 200, 200, i * arc, (i + 1) * arc);
     ctx.fill();
 
-    // 🔲 GARIS KOLom TEBAL
-    ctx.beginPath();
-    ctx.moveTo(200, 200);
-    ctx.lineTo(
-      200 + Math.cos(i * arc) * 200,
-      200 + Math.sin(i * arc) * 200
-    );
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // text hadiah
     ctx.save();
     ctx.translate(200, 200);
     ctx.rotate(i * arc + arc / 2);
@@ -167,38 +110,69 @@ function drawWheel() {
 }
 drawWheel();
 
-/* lampu LED keliling */
-const lights = document.getElementById("lights");
-
-for (let i = 0; i < 24; i++) {
-  let dot = document.createElement("span");
-  let angle = (i / 24) * 360;
-
-  dot.style.top = 200 + 180 * Math.sin(angle * Math.PI / 180) + "px";
-  dot.style.left = 200 + 180 * Math.cos(angle * Math.PI / 180) + "px";
-
-  dot.style.animationDelay = (i * 0.1) + "s";
-  lights.appendChild(dot);
-}
-
 /* easing */
 function easeOut(t) {
   return 1 - Math.pow(1 - t, 4);
 }
 
-/* spin realistis + hasil sesuai pointer */
-function spin() {
-  let index = Math.floor(Math.random() * prizes.length);
+/* =========================
+   API (Google Apps Script)
+========================= */
+
+// GANTI URL INI
+const API = "https://script.google.com/macros/s/AKfycbxb4jikeZgOwBLwQ_7vAj_adq3Ch4cPg9deimKmcd7h1f7cxvp5L3PomgubKmRdg215/exec";
+
+async function cekKode(kode){
+  const res = await fetch(API + "?action=cekKode&kode=" + kode);
+  const data = await res.json();
+  return data.valid;
+}
+
+async function getRTP(){
+  const res = await fetch(API + "?action=getRTP");
+  return await res.json();
+}
+
+async function getHadiah(){
+  const rtp = await getRTP();
+
+  let rand = Math.random() * 100;
+  let total = 0;
+
+  for(let item of rtp){
+    total += item.peluang;
+    if(rand <= total) return item.hadiah;
+  }
+
+  return rtp[0].hadiah;
+}
+
+/* =========================
+   SPIN
+========================= */
+
+async function spin() {
+  const kode = document.getElementById("code").value;
+
+  let valid = await cekKode(kode);
+
+  if (!valid) {
+    alert("❌ Kode tidak valid!");
+    return;
+  }
+
+  let hadiah = await getHadiah();
+
+  let index = prizes.indexOf(hadiah);
+  if(index === -1) index = 0;
 
   let arc = 360 / prizes.length;
-  let target = 360 - (index * arc) - arc / 2;
 
+  let target = 360 - (index * arc) - arc / 2;
   let finalAngle = 360 * 5 + target;
 
   let start = null;
   let duration = 5000;
-
-  const tick = document.getElementById("tick");
 
   function animate(time) {
     if (!start) start = time;
@@ -212,16 +186,10 @@ function spin() {
 
     canvas.style.transform = `rotate(${currentAngle}deg)`;
 
-    // 🔊 suara tik tik
-    if (progress < 1) {
-      tick.currentTime = 0;
-      tick.play();
-    }
-
     if (progress < 1) {
       requestAnimationFrame(animate);
     } else {
-      alert("🎉 Kamu dapat: " + prizes[index]);
+      alert("🎉 Kamu dapat: " + hadiah);
     }
   }
 
@@ -230,69 +198,4 @@ function spin() {
 </script>
 
 </body>
-</html>// Cek Kode
-async function cekKode(kode) {
-  const res = await fetch("https://script.google.com/macros/s/AKfycbxb4jikeZgOwBLwQ_7vAj_adq3Ch4cPg9deimKmcd7h1f7cxvp5L3PomgubKmRdg215/exec	);
-  const data = await res.json();
-  return data.valid;
-}
-
-// Ambil RTP
-async function getRTP() {
-  const res = await fetch("https://script.google.com/macros/s/AKfycbxb4jikeZgOwBLwQ_7vAj_adq3Ch4cPg9deimKmcd7h1f7cxvp5L3PomgubKmRdg215/exec	);
-  const data = await res.json();
-  return data;
-}
-
-// Fungsi untuk Spin
-async function spin() {
-  const kode = document.getElementById("code").value;
-  let valid = await cekKode(kode);
-
-  if (!valid) {
-    alert("❌ Kode tidak valid!");
-    return;
-  }
-
-  alert("✅ Kode valid! Spin dimulai...");
-
-  // Ambil hadiah dari RTP
-  const hadiah = await getHadiah();
-  console.log("Kamu dapat hadiah: " + hadiah);
-
-  // Putar roda dan tampilkan hadiah
-  spinLogic(hadiah);
-}
-
-// Logika untuk Spin Wheel
-async function spinLogic(hadiah) {
-  const prizes = ["10.000", "50.000", "100.000", "1.000.000", "2.000.000", "ZX1000RR", "VESPA SPRINT", "FORTUNER", "BRIO"];
-  let index = prizes.indexOf(hadiah);
-  let arc = 360 / prizes.length;
-
-  let targetAngle = 360 - (index * arc) - arc / 2;
-  let finalAngle = 360 * 5 + targetAngle;
-
-  let duration = 5000;
-  let start = null;
-
-  function animate(time) {
-    if (!start) start = time;
-
-    let progress = (time - start) / duration;
-    if (progress > 1) progress = 1;
-
-    let eased = 1 - Math.pow(1 - progress, 4);
-    let currentAngle = finalAngle * eased;
-
-    canvas.style.transform = `rotate(${currentAngle}deg)`;
-
-    if (progress < 1) {
-      requestAnimationFrame(animate);
-    } else {
-      alert(`🎉 Kamu dapat: ${hadiah}`);
-    }
-  }
-
-  requestAnimationFrame(animate);
-}
+</html>
