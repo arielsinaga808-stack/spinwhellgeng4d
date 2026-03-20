@@ -121,7 +121,6 @@ function easeOut(t) {
 
 // GANTI URL INI
 const API = "https://script.google.com/macros/s/AKfycbxb4jikeZgOwBLwQ_7vAj_adq3Ch4cPg9deimKmcd7h1f7cxvp5L3PomgubKmRdg215/exec";
-
 async function cekKode(kode){
   const res = await fetch(API + "?action=cekKode&kode=" + kode);
   const data = await res.json();
