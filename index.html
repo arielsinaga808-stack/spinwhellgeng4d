@@ -13,13 +13,10 @@ body {
   color: white;
 }
 
-/* container */
 .container {
   margin-top: 20px;
-  position: relative;
 }
 
-/* pointer (arah ke bawah) */
 .pointer {
   width: 0;
   height: 0;
@@ -30,7 +27,6 @@ body {
   filter: drop-shadow(0 0 10px red);
 }
 
-/* wheel container */
 .wheel-box {
   width: 420px;
   height: 420px;
@@ -38,17 +34,16 @@ body {
   position: relative;
 }
 
-/* canvas wheel */
 canvas {
   border-radius: 50%;
+  background: #fff;
   box-shadow: 
-    0 0 15px #ff0044,
-    0 0 40px #ff0044,
-    0 0 80px #ff0044,
-    inset 0 0 30px rgba(255,255,255,0.2);
+    0 0 20px #ff0044,
+    0 0 50px #ff0044,
+    inset 0 0 30px rgba(0,0,0,0.3);
 }
 
-/* lampu LED keliling */
+/* LED */
 .light {
   position: absolute;
   width: 10px;
@@ -64,31 +59,23 @@ canvas {
   to {opacity: 0.3;}
 }
 
-/* input */
 input {
   margin-top: 15px;
   padding: 10px;
-  font-size: 16px;
   border-radius: 8px;
   border: none;
   text-align: center;
 }
 
-/* tombol */
 button {
   margin-top: 10px;
   padding: 12px 30px;
-  font-size: 18px;
   border-radius: 10px;
   border: none;
   background: black;
   color: #ff0044;
   box-shadow: 0 0 20px #ff0044;
   cursor: pointer;
-}
-
-button:hover {
-  box-shadow: 0 0 40px #ff0044;
 }
 </style>
 </head>
@@ -105,146 +92,146 @@ button:hover {
     <canvas id="wheel" width="400" height="400"></canvas>
   </div>
 
-  <br>
-
   <input id="code" placeholder="MASUKKAN KODE">
   <br>
   <button onclick="checkCode()">SPIN</button>
 
 </div>
 
-<audio id="tick" src="https://www.soundjay.com/mechanical/sounds/tick-1.mp3"></audio>
-
 <script>
 const canvas = document.getElementById("wheel");
 const ctx = canvas.getContext("2d");
 
 const prizes = [
-  "10K", "ZX1000RR", "50K", "FORTUNER",
-  "100K", "VESPA", "1JT", "BRIO", "2JT", "APARTEMEN"
+  "10K","ZX1000RR","50K","FORTUNER",
+  "100K","VESPA","1JT","BRIO","2JT","APARTEMEN"
 ];
 
 let currentAngle = 0;
 
-/* gambar wheel */
+/* DRAW WHEEL */
 function drawWheel() {
   const arc = (2 * Math.PI) / prizes.length;
 
-  ctx.clearRect(0, 0, 400, 400);
-
   for (let i = 0; i < prizes.length; i++) {
+
     ctx.beginPath();
     ctx.fillStyle = i % 2 ? "#FFD700" : "#8B0000";
-    ctx.moveTo(200, 200);
-    ctx.arc(200, 200, 200, i * arc, (i + 1) * arc);
+    ctx.moveTo(200,200);
+    ctx.arc(200,200,200,i*arc,(i+1)*arc);
     ctx.fill();
 
-    // garis kolom
     ctx.beginPath();
-    ctx.moveTo(200, 200);
+    ctx.moveTo(200,200);
     ctx.lineTo(
-      200 + Math.cos(i * arc) * 200,
-      200 + Math.sin(i * arc) * 200
+      200 + Math.cos(i*arc)*200,
+      200 + Math.sin(i*arc)*200
     );
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle="white";
+    ctx.lineWidth=2;
     ctx.stroke();
 
-    // text hadiah
     ctx.save();
-    ctx.translate(200, 200);
-    ctx.rotate(i * arc + arc / 2);
-    ctx.fillStyle = "black";
-    ctx.font = "bold 14px Arial";
-    ctx.fillText(prizes[i], 80, 10);
+    ctx.translate(200,200);
+    ctx.rotate(i*arc + arc/2);
+    ctx.fillStyle="black";
+    ctx.font="bold 14px Arial";
+    ctx.fillText(prizes[i],80,10);
     ctx.restore();
   }
 }
 
-/* LED keliling */
+/* LED */
 function createLED() {
   const box = document.getElementById("wheelBox");
 
-  for (let i = 0; i < 30; i++) {
-    const led = document.createElement("div");
-    led.className = "light";
+  for (let i=0;i<30;i++){
+    let led=document.createElement("div");
+    led.className="light";
 
-    let angle = (i / 30) * 360;
+    let angle=(i/30)*360;
 
-    led.style.top = (200 + 180 * Math.sin(angle * Math.PI / 180)) + "px";
-    led.style.left = (200 + 180 * Math.cos(angle * Math.PI / 180)) + "px";
-
-    led.style.animationDelay = (i * 0.05) + "s";
+    led.style.top=(200+180*Math.sin(angle*Math.PI/180))+"px";
+    led.style.left=(200+180*Math.cos(angle*Math.PI/180))+"px";
 
     box.appendChild(led);
   }
 }
 
 /* easing */
-function easeOut(t) {
-  return 1 - Math.pow(1 - t, 4);
+function easeOut(t){
+  return 1-Math.pow(1-t,4);
 }
 
-/* Check kode dengan API Google Apps Script */
-function checkCode() {
-  const code = document.getElementById("code").value;
-
-  fetch("https://script.google.com/macros/s/AKfycbw_Ul0ghKRjZXM65YRYOxMEwRGpPyKP4YysKyaFK-gKjhtKlm5mhivFeUQtUgAhAep_/exec", {
-    method: "POST",
-    body: new URLSearchParams({ code: code })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (!data.success) {
-      alert(data.message);
-      return;
-    }
-
-    spinByResult(data.prize); // Jika valid, lanjut spin sesuai hadiah
-  });
+/* SPIN RANDOM (backup) */
+function spin(){
+  let index=Math.floor(Math.random()*prizes.length);
+  spinByIndex(index);
 }
 
-/* SPIN berdasarkan hadiah yang didapat */
-function spinByResult(prizeName) {
+/* SPIN BY INDEX */
+function spinByIndex(index){
+  let arc=360/prizes.length;
+  let target=(index*arc)+(arc/2);
+  let finalAngle=360*6-target;
 
-  let index = prizes.indexOf(prizeName);
+  let start=null;
+  let duration=5000;
 
-  if (index === -1) {
-    alert("Hadiah tidak ada di wheel");
-    return;
-  }
+  function animate(time){
+    if(!start) start=time;
 
-  let arc = 360 / prizes.length;
-  let target = (index * arc) + (arc / 2);
+    let progress=(time-start)/duration;
+    if(progress>1) progress=1;
 
-  let finalAngle = 360 * 6 - target;
+    let eased=easeOut(progress);
+    currentAngle=finalAngle*eased;
 
-  let start = null;
-  let duration = 5000;
+    canvas.style.transform=`rotate(${currentAngle}deg)`;
 
-  function animate(time) {
-    if (!start) start = time;
-
-    let progress = (time - start) / duration;
-    if (progress > 1) progress = 1;
-
-    let eased = easeOut(progress);
-
-    currentAngle = finalAngle * eased;
-
-    canvas.style.transform = `rotate(${currentAngle}deg)`;
-
-    if (progress < 1) {
+    if(progress<1){
       requestAnimationFrame(animate);
-    } else {
-      alert("🎉 Kamu dapat: " + prizeName);
+    }else{
+      alert("🎉 Kamu dapat: "+prizes[index]);
     }
   }
 
   requestAnimationFrame(animate);
 }
 
-/* init */
+/* CHECK CODE (API + fallback) */
+function checkCode(){
+  const code=document.getElementById("code").value;
+
+  fetch("https://script.google.com/macros/s/AKfycbw_Ul0ghKRjZXM65YRYOxMEwRGpPyKP4YysKyaFK-gKjhtKlm5mhivFeUQtUgAhAep_/exec",{
+    method:"POST",
+    body:new URLSearchParams({code:code})
+  })
+  .then(res=>res.json())
+  .then(data=>{
+    if(!data.success){
+      alert(data.message);
+      return;
+    }
+
+    let index=prizes.indexOf(data.prize);
+
+    if(index===-1){
+      alert("Hadiah tidak cocok, pakai random");
+      spin();
+      return;
+    }
+
+    spinByIndex(index);
+  })
+  .catch(err=>{
+    console.log(err);
+    alert("API error, pakai spin biasa");
+    spin();
+  });
+}
+
+/* INIT */
 drawWheel();
 createLED();
 </script>
