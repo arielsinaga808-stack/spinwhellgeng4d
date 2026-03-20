@@ -230,4 +230,69 @@ function spin() {
 </script>
 
 </body>
-</html>
+</html>// Cek Kode
+async function cekKode(kode) {
+  const res = await fetch("https://script.google.com/macros/s/AKfycbxb4jikeZgOwBLwQ_7vAj_adq3Ch4cPg9deimKmcd7h1f7cxvp5L3PomgubKmRdg215/exec	);
+  const data = await res.json();
+  return data.valid;
+}
+
+// Ambil RTP
+async function getRTP() {
+  const res = await fetch("https://script.google.com/macros/s/AKfycbxb4jikeZgOwBLwQ_7vAj_adq3Ch4cPg9deimKmcd7h1f7cxvp5L3PomgubKmRdg215/exec	);
+  const data = await res.json();
+  return data;
+}
+
+// Fungsi untuk Spin
+async function spin() {
+  const kode = document.getElementById("code").value;
+  let valid = await cekKode(kode);
+
+  if (!valid) {
+    alert("❌ Kode tidak valid!");
+    return;
+  }
+
+  alert("✅ Kode valid! Spin dimulai...");
+
+  // Ambil hadiah dari RTP
+  const hadiah = await getHadiah();
+  console.log("Kamu dapat hadiah: " + hadiah);
+
+  // Putar roda dan tampilkan hadiah
+  spinLogic(hadiah);
+}
+
+// Logika untuk Spin Wheel
+async function spinLogic(hadiah) {
+  const prizes = ["10.000", "50.000", "100.000", "1.000.000", "2.000.000", "ZX1000RR", "VESPA SPRINT", "FORTUNER", "BRIO"];
+  let index = prizes.indexOf(hadiah);
+  let arc = 360 / prizes.length;
+
+  let targetAngle = 360 - (index * arc) - arc / 2;
+  let finalAngle = 360 * 5 + targetAngle;
+
+  let duration = 5000;
+  let start = null;
+
+  function animate(time) {
+    if (!start) start = time;
+
+    let progress = (time - start) / duration;
+    if (progress > 1) progress = 1;
+
+    let eased = 1 - Math.pow(1 - progress, 4);
+    let currentAngle = finalAngle * eased;
+
+    canvas.style.transform = `rotate(${currentAngle}deg)`;
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      alert(`🎉 Kamu dapat: ${hadiah}`);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
