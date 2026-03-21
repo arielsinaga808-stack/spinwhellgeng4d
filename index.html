@@ -7,19 +7,17 @@
   <style>
     body {
       margin: 0;
-      background: radial-gradient(circle, #ff0033, #000);
+      background: radial-gradient(circle, #ff0033, #000); /* Background merah */
       font-family: Arial, sans-serif;
       text-align: center;
       color: white;
     }
 
-    /* container */
     .container {
       margin-top: 20px;
       position: relative;
     }
 
-    /* pointer (arah ke bawah) */
     .pointer {
       width: 0;
       height: 0;
@@ -30,7 +28,6 @@
       filter: drop-shadow(0 0 10px red);
     }
 
-    /* wheel container */
     .wheel-box {
       width: 420px;
       height: 420px;
@@ -38,7 +35,6 @@
       position: relative;
     }
 
-    /* canvas wheel */
     canvas {
       border-radius: 50%;
       background: #fff;
@@ -48,7 +44,6 @@
         inset 0 0 30px rgba(0,0,0,0.3);
     }
 
-    /* LED */
     .light {
       position: absolute;
       width: 10px;
@@ -64,7 +59,6 @@
       to {opacity: 0.3;}
     }
 
-    /* input */
     input {
       margin-top: 15px;
       padding: 10px;
@@ -73,7 +67,6 @@
       text-align: center;
     }
 
-    /* tombol */
     button {
       margin-top: 10px;
       padding: 12px 30px;
@@ -101,155 +94,135 @@
   <input id="code" placeholder="MASUKKAN KODE">
   <br>
   <button onclick="checkCode()">SPIN</button>
-
 </div>
 
-<audio id="tick" src="https://www.soundjay.com/mechanical/sounds/tick-1.mp3"></audio>
-
 <script>
-const canvas = document.getElementById("wheel");
-const ctx = canvas.getContext("2d");
+  // Data hadiah dan kode
+  const prizes = [
+    "10K", "ZX1000RR", "50K", "FORTUNER",
+    "100K", "VESPA", "1JT", "BRIO", "2JT", "APARTEMEN"
+  ];
 
-const prizes = [
-  "10K", "ZX1000RR", "50K", "FORTUNER",
-  "100K", "VESPA", "1JT", "BRIO", "2JT", "APARTEMEN"
-];
+  let currentAngle = 0;
 
-let currentAngle = 0;
+  // Fungsi untuk menggambar roda
+  function drawWheel() {
+    const canvas = document.getElementById("wheel");
+    const ctx = canvas.getContext("2d");
+    const arc = (2 * Math.PI) / prizes.length;
 
-/* gambar wheel */
-function drawWheel() {
-  const arc = (2 * Math.PI) / prizes.length;
+    ctx.clearRect(0, 0, 400, 400); // Clear canvas
 
-  ctx.clearRect(0, 0, 400, 400);
+    for (let i = 0; i < prizes.length; i++) {
+      ctx.beginPath();
+      ctx.fillStyle = i % 2 ? "#FFD700" : "#8B0000"; // Selang-seling warna
+      ctx.moveTo(200, 200);
+      ctx.arc(200, 200, 200, i * arc, (i + 1) * arc);
+      ctx.fill();
 
-  for (let i = 0; i < prizes.length; i++) {
-    ctx.beginPath();
-    ctx.fillStyle = i % 2 ? "#FFD700" : "#8B0000";
-    ctx.moveTo(200, 200);
-    ctx.arc(200, 200, 200, i * arc, (i + 1) * arc);
-    ctx.fill();
+      // Garis pemisah
+      ctx.beginPath();
+      ctx.moveTo(200, 200);
+      ctx.lineTo(
+        200 + Math.cos(i * arc) * 200,
+        200 + Math.sin(i * arc) * 200
+      );
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 2;
+      ctx.stroke();
 
-    // garis kolom
-    ctx.beginPath();
-    ctx.moveTo(200, 200);
-    ctx.lineTo(
-      200 + Math.cos(i * arc) * 200,
-      200 + Math.sin(i * arc) * 200
-    );
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // text hadiah
-    ctx.save();
-    ctx.translate(200, 200);
-    ctx.rotate(i * arc + arc / 2);
-    ctx.fillStyle = "black";
-    ctx.font = "bold 14px Arial";
-    ctx.fillText(prizes[i], 80, 10);
-    ctx.restore();
-  }
-}
-
-/* LED keliling */
-function createLED() {
-  const box = document.getElementById("wheelBox");
-
-  for (let i = 0; i < 30; i++) {
-    const led = document.createElement("div");
-    led.className = "light";
-
-    let angle = (i / 30) * 360;
-
-    led.style.top = (200 + 180 * Math.sin(angle * Math.PI / 180)) + "px";
-    led.style.left = (200 + 180 * Math.cos(angle * Math.PI / 180)) + "px";
-
-    led.style.animationDelay = (i * 0.05) + "s";
-
-    box.appendChild(led);
-  }
-}
-
-/* easing */
-function easeOut(t) {
-  return 1 - Math.pow(1 - t, 4);
-}
-
-/* SPIN RANDOM (backup) */
-function spin() {
-  let index = Math.floor(Math.random() * prizes.length);
-  spinByIndex(index);
-}
-
-/* SPIN BASED ON RESULT FROM API */
-function spinByIndex(index) {
-  let arc = 360 / prizes.length;
-  let target = (index * arc) + (arc / 2);
-  let finalAngle = 360 * 6 - target;
-
-  let start = null;
-  let duration = 5000;
-
-  function animate(time) {
-    if (!start) start = time;
-
-    let progress = (time - start) / duration;
-    if (progress > 1) progress = 1;
-
-    let eased = easeOut(progress);
-    currentAngle = finalAngle * eased;
-
-    canvas.style.transform = `rotate(${currentAngle}deg)`;
-
-    if (progress < 1) {
-      requestAnimationFrame(animate);
-    } else {
-      alert("🎉 Kamu dapat: " + prizes[index]);
+      // Teks hadiah
+      ctx.save();
+      ctx.translate(200, 200);
+      ctx.rotate(i * arc + arc / 2);
+      ctx.fillStyle = "black";
+      ctx.font = "bold 14px Arial";
+      ctx.fillText(prizes[i], 80, 10);
+      ctx.restore();
     }
   }
 
-  requestAnimationFrame(animate);
-}
+  // Fungsi untuk menambahkan LED
+  function createLED() {
+    const box = document.getElementById("wheelBox");
 
-/* Check code with Google Apps Script API */
-function checkCode() {
-  const code = document.getElementById("code").value;
-  console.log("Kode yang dimasukkan:", code);
+    for (let i = 0; i < 30; i++) {
+      const led = document.createElement("div");
+      led.className = "light";
 
-  fetch("https://script.google.com/macros/s/AKfycbw_Ul0ghKRjZXM65YRYOxMEwRGpPyKP4YysKyaFK-gKjhtKlm5mhivFeUQtUgAhAep_/exec", {
-    method: "POST",
-    body: new URLSearchParams({ code: code })
-  })
-  .then(res => res.json())
-  .then(data => {
-    console.log("Data yang diterima dari API:", data);
+      let angle = (i / 30) * 360;
 
-    if (!data.success) {
-      alert(data.message);
-      return;
+      led.style.top = (200 + 180 * Math.sin(angle * Math.PI / 180)) + "px";
+      led.style.left = (200 + 180 * Math.cos(angle * Math.PI / 180)) + "px";
+
+      box.appendChild(led);
     }
+  }
 
-    let index = prizes.indexOf(data.prize);
+  // Fungsi untuk membuat animasi spin
+  function easeOut(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
 
-    if (index === -1) {
-      alert("Hadiah tidak cocok, pakai random");
-      spin();
-      return;
-    }
-
+  // Fungsi untuk memulai spin
+  function spin() {
+    let index = Math.floor(Math.random() * prizes.length);
     spinByIndex(index);
-  })
-  .catch(err => {
-    console.log("Error API:", err);
-    alert("API error, pakai spin biasa");
-    spin(); // fallback spin biasa
-  });
-}
+  }
 
-/* init */
-drawWheel();
-createLED();
+  // Fungsi spin berdasarkan index hadiah
+  function spinByIndex(index) {
+    let arc = 360 / prizes.length;
+    let target = (index * arc) + (arc / 2);
+    let finalAngle = 360 * 6 - target;
+
+    let start = null;
+    let duration = 5000;
+
+    function animate(time) {
+      if (!start) start = time;
+
+      let progress = (time - start) / duration;
+      if (progress > 1) progress = 1;
+
+      let eased = easeOut(progress);
+      currentAngle = finalAngle * eased;
+
+      const canvas = document.getElementById("wheel");
+      canvas.style.transform = `rotate(${currentAngle}deg)`;
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        alert("🎉 Kamu dapat: " + prizes[index]);
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  // Fungsi untuk memeriksa kode yang dimasukkan
+  function checkCode() {
+    const code = document.getElementById("code").value;
+
+    const codeData = [
+      { code: "4dxyz001", status: "BELUM", prize: "10K" },
+      { code: "4dxyz002", status: "BELUM", prize: "ZX1000RR" }
+    ];
+
+    const codeFound = codeData.find(entry => entry.code === code);
+
+    if (codeFound) {
+      spinByIndex(prizes.indexOf(codeFound.prize));
+    } else {
+      alert("Kode tidak valid!");
+      spin(); // Jika kode tidak valid, spin biasa
+    }
+  }
+
+  // Inisialisasi menggambar roda dan LED
+  drawWheel();
+  createLED();
 </script>
 
 </body>
