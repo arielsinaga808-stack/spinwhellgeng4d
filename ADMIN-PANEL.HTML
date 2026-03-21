@@ -1,1 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+</head>
+<body style="text-align:center; background:#222; color:white;">
 
+<script>
+if(localStorage.getItem("isAdminLoggedIn")!=="true"){
+  window.location.href="admin-login.html";
+}
+</script>
+
+<h2>ADMIN PANEL</h2>
+
+<button onclick="logout()">Logout</button>
+
+<h3>Tambah Hadiah</h3>
+<input id="prize"><button onclick="addPrize()">Tambah</button>
+
+<h3>Tambah Kode</h3>
+<input id="code">
+<input id="kodePrize" placeholder="Hadiah">
+<button onclick="addCode()">Tambah</button>
+
+<h3>Data Kode</h3>
+<ul id="list"></ul>
+
+<script>
+let prizes = JSON.parse(localStorage.getItem("prizes")) || [];
+let codes = JSON.parse(localStorage.getItem("codes")) || [];
+
+function save(){
+  localStorage.setItem("prizes",JSON.stringify(prizes));
+  localStorage.setItem("codes",JSON.stringify(codes));
+}
+
+function addPrize(){
+  let val = document.getElementById("prize").value;
+  prizes.push(val);
+  save();
+  alert("Hadiah ditambah!");
+}
+
+function addCode(){
+  let code = document.getElementById("code").value;
+  let prize = document.getElementById("kodePrize").value;
+
+  codes.push({
+    code: code,
+    prize: prize,
+    used: false
+  });
+
+  save();
+  render();
+  alert("Kode ditambah!");
+}
+
+function render(){
+  let list = document.getElementById("list");
+  list.innerHTML = "";
+
+  codes.forEach(c=>{
+    let li = document.createElement("li");
+    li.innerText = c.code + " - " + c.prize + " (" + c.used + ")";
+    list.appendChild(li);
+  });
+}
+
+function logout(){
+  localStorage.removeItem("isAdminLoggedIn");
+  window.location.href="admin-login.html";
+}
+
+render();
+</script>
+
+</body>
+</html>
